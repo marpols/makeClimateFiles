@@ -51,10 +51,20 @@ ptot_gs <- clim_data[(clim_data$Month %in% c(5:10)),] |>
 #GDD
 clim_data$GDD <- pmax(0,(clim_data$Max.Temp...C.+clim_data$Min.Temp...C.)/2 - base)
 
+#monthly cummulative GDD
+GDDmthly <- GDDcum <- clim_data |> 
+  group_by(Year,Month) |> 
+  summarize(GDD.cummulative = sum(GDD))
+
 #cummulative Yearly GDD from over january to october
 GDDcum <- clim_data[(clim_data$Month %in% c(1:10)),] |> 
   group_by(Year) |> 
   summarize(GDD.cummulative = sum(GDD))
+
+#cummulative GDD for specific period
+GDDprd <- sum(clim_data[which(clim_data$Year == 2024 & clim_data$Month == 5 & clim_data$Day == 16):
+                          which(clim_data$Year == 2024 & clim_data$Month == 8 & clim_data$Day == 5),
+                        11])
 
 
 
