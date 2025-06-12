@@ -4,11 +4,6 @@
 #May 2022
 #-----------------------------
 
-if (!require("nasapower")){
-  install.packages("nasapower")
-}
-library(nasapower)
-
 
 download_nasapower <- function(coordinates, pars_list, date_list,temporal_type ){
   #calls get_power for one coordinate set
@@ -19,17 +14,24 @@ download_nasapower <- function(coordinates, pars_list, date_list,temporal_type )
 get_NP <- function(){
   i <- 1
   while (i <= length(station_list)){
+    stn_name <- station_list[[i]]$name
+    filename <- file.path(dir, sprintf("%s/%s_nasapower.csv",
+                                       stn_name, stn_name))
+    if(filename %in% list.files(file.path(dir,stn_name), full.names = T)){
+      message(sprintf("NASA POWER file for %s already exists", stn_name))
+    } else {
     power_file <-  download_nasapower(c(as.numeric(station_list[[i]]$long),
                                         as.numeric(station_list[[i]]$lat)), 
                                       climate_data, 
                                       c(station_list[[i]]$start,
                                         station_list[[i]]$end), 
                                       time_period)
-    filename <- file.path(dir,sprintf("%s/%s_nasapower.csv", stn, stn))
+    
     write.csv(power_file, file = filename )
-    message("Successfully created climate file for: ",
-            station_list[[i]]$name, " as ", 
-            paste(station_list[[i]]$name, "nasapower",".csv",sep="_"))
+    message("Successfully downloaded climate file from NASA POWER: ",
+            stn_name, " as ", 
+            paste(stn_name, "nasapower",".csv",sep="_"))
+    }
     i <- i + 1
   }
 }

@@ -15,6 +15,8 @@ read_NP_file <- function(stn) {
 }
 
 get_missing <- function(climfile,NPfile,climcols,NPcols){
+#TODO
+  # clean this up
 #find and replace missing values
  i <- 1
  while (i <= length(climcols)){

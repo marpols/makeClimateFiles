@@ -3,16 +3,16 @@
 #create STICS climate files
 
 #Sources------------------------------------------------------------------------
-source("src/download_ECCC.R")
-source("src/generate_completeClimate.R")
-source("src/download_nasapowerfiles.R")
-source("src/fill_MD.R")
-source("src/genSTICSclimate.R")
-
+srcs <- c("src/packages.R","src/download_ECCC.R","src/generate_completeClimate.R",
+          "src/download_nasapowerfiles.R","src/fill_MD.R",
+          "src/genSTICSclimate.R")
+invisible(sapply(srcs, source))
 
 #---------------------------------Settings--------------------------------------
-#working directory for climate files
-dir <- "C:/Users/PolsinelliM/OneDrive - AGR-AGR/Documents/MntGem STICS"
+#output directory
+dir <- rstudioapi::selectDirectory()
+#or from path
+dir <- "outputs"
 
 #Stations--------------------------------
 #list of weather station names to extract data from
@@ -22,10 +22,15 @@ dir <- "C:/Users/PolsinelliM/OneDrive - AGR-AGR/Documents/MntGem STICS"
 
 # Create a list of stations
 station_list <- list(
-  # Station$new("Harrington", "30308", "2004-01-01", "2024-12-31"),
-  # Station$new("Summerside", "10800", "1994-01-01", "2024-12-31")
-  Station$new("Ste-Anne-de-Bellvue", "10873", "2022-01-01", "2024-12-31")
+  Station$new("Harrington", "30308", "2004-01-01", "2024-12-31"),
+  Station$new("Summerside", "10800", "2004-01-01", "2024-12-31"),
+  Station$new("New Glasgow", "6537", "2004-01-01", "2024-12-31"),
+  Station$new("East Point (AUT)", "7177", "2004-01-01", "2024-12-31"),
+  Station$new("North Cape", "10814", "2004-01-01", "2024-12-31")
 )
+
+names <- sapply(station_list, function(x) x$name)
+station_list <- setNames(station_list,names)
 
 #ECCC Hourly Data------------------------
 #Columns of data from weather data table to calculate averages for
@@ -50,7 +55,8 @@ climate_data <- c("T2M_MAX",
                   "WS10M",
                   "ALLSKY_SFC_SW_DWN")
 
-#choose "hourly", "daily" or "monthly"
+#choose "hourly", "daily" or "monthly" 
+#(daily is needed to combine with ECCC file and generate STICS climate files)
 time_period <- "daily"
 
 #Generate STICS files
@@ -58,8 +64,6 @@ STICS_files <- T
 
 
 #Function Calls-----------------------------------------------------------------
-
-setwd(dir)
 
 #download ECCC climate data
 download_climate()

@@ -1,19 +1,5 @@
 #download ECCC historical climate daily and hourly data files
 
-# Load necessary packages
-if (!require("R6")){
-  install.packages("R6")
-}
-if (!require("logger")){
-  install.packages("logger")
-}
-
-library(R6)
-library(lubridate)
-library(httr)
-library(logger)
-
-
 # Define the Station class
 Station <- R6Class("Station",
                    public = list(
@@ -38,15 +24,12 @@ Station <- R6Class("Station",
                    lock_objects = FALSE
 )
 
-# Get the current working directory
-root <- dir
-
 download_climate <- function(){
   # Loop through each station
   for (obj in station_list) {
     
     station_name <- obj$name
-    path <- file.path(root, obj$name)
+    path <- file.path(dir, obj$name)
     
     # Create the station folder if it doesn't exist
     if (!dir.exists(path)) {
@@ -55,9 +38,6 @@ download_climate <- function(){
     } else {
       message("Directory already exists: ", path)
     }
-    
-    # Move into station directory
-    setwd(path)
     
     # Define months and days for leap and non-leap years
     months <- sprintf("%02d", 1:12)  # Format months as "01", "02", ..., "12"
@@ -80,18 +60,19 @@ download_climate <- function(){
         message("Directory already exists: ", year_path)
       }
       
-      # Move into year folder
-      setwd(year_path)
-      
       # Download the daily climate data file
       daily_url <- sprintf(
         "http://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=%s&Year=%d&Month=12&Day=1&timeframe=2&submit=Download+Data",
         obj$id, yr
       )
       
-      daily_file <- sprintf("%s_%d_ECCC.csv", obj$name, yr)
-      message("Downloading ", daily_file)
-      download.file(daily_url, destfile = daily_file, quiet = TRUE, mode = "wb")
+      daily_file <- sprintf("%s/%s_%d_ECCC.csv", year_path, obj$name, yr)
+      if(daily_file %in% list.files(year_path)) {
+        message(sprintf("%s_%d_ECCC.csv", obj$name, yr), " already exists")
+      } else{
+        message("Downloading ", daily_file)
+        download.file(daily_url, destfile = daily_file, quiet = TRUE, mode = "wb")
+      }
       
       for (i in seq_along(months)) {
         hourly_url <- sprintf(
@@ -99,13 +80,13 @@ download_climate <- function(){
           obj$id, yr, months[i], days[i]
         )
         
-        hourly_file <- sprintf("hourly_%d_%s.csv", yr, months[i])
-        
-        message("Downloading ", hourly_file)
-        download.file(hourly_url, destfile = hourly_file, quiet = TRUE, mode = "wb")
+        hourly_file <- sprintf("%s/hourly_%d_%s.csv", year_path, yr, months[i])
+        if(daily_file %in% list.files(year_path)) {
+          message(sprintf("hourly_%d_%s.csv",  yr, months[i]), " already exists")
+        } else
+          message("Downloading ", hourly_file)
+          download.file(hourly_url, destfile = hourly_file, quiet = TRUE, mode = "wb")
       }
-      # Move back to station folder
-      setwd(path)
     }
     #get lat and long from ECCC file
     cfile <- read.csv(file.path(path,
@@ -113,10 +94,8 @@ download_climate <- function(){
              )
     obj$long <- cfile$Longitude..x.[1]
     obj$lat <- cfile$Latitude..y.[1]
-    # Return to root directory
-    setwd(root)
+
   }
-  print(root)
 }
 
 
